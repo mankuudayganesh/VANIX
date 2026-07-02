@@ -1,0 +1,7 @@
+api/.env
+.env
+*.log
+*.png
+.idea/
+.vscode/
+.gitpat.txt

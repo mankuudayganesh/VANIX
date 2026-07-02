@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- Red rounded background matching app icon style -->
+  <rect width="100" height="100" rx="22" fill="#E3000F"/>
+  <!-- Bold white V drawn as a polygon path (no font dependency) -->
+  <polygon points="
+    18,22
+    34,22
+    50,68
+    66,22
+    82,22
+    58,78
+    42,78
+  " fill="#FFFFFF"/>
+</svg>
