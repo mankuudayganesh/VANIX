@@ -1,6 +1,6 @@
 # VANIX STUDIO — PHP & MySQL Full-Stack Portal
 
-This documentation outlines the architecture, configuration, and deployment details for the updated full-stack **VANIX STUDIO Portal** running on standard PHP + MySQL shared web hosting.
+This documentation outlines the architecture, directory structure, compilation workflow, and deployment details for the full-stack **VANIX STUDIO Portal** running on standard PHP + MySQL shared web hosting.
 
 ---
 
@@ -26,112 +26,157 @@ This documentation outlines the architecture, configuration, and deployment deta
                        └─────────────────────────┘
 ```
 
-1. **Frontend (Client-side)**: Built using pure vanilla HTML5, CSS3, and modern progressive JavaScript (located in `frontend/`). Static files are served directly by the web server (Apache/LiteSpeed) with no Node.js compilation required.
-2. **Backend (Server-side)**: Built with secure modular PHP controllers located inside `api/`. Endpoint routing to `/api/*` is handled via Apache `.htaccess` rewrite rules mapping requests to a single entry point `api/index.php`.
-3. **Database**: Standard relational MySQL or MariaDB database running natively on your hosting plan.
+1. **Frontend**: Pure vanilla HTML5, CSS3, and progressive JavaScript located at the project root. Interactive views utilize layout components and styles from the `css/` and `js/` directories.
+2. **Backend**: Lightweight PHP backend controller system located inside `api/`. Endpoint routing to `/api/*` is handled via Apache `.htaccess` rewrite rules mapping requests to a single entry point `api/index.php`.
+3. **Database**: Relational MySQL or MariaDB database running natively on PHP shared hosting.
 
 ---
 
-## 📁 Directory Structure
+## 🔐 Security & Credentials Protection
 
-```
-vanixstudio/
-├── api/                        ← All PHP/API code lives here
-│   ├── .htaccess               ← Apache rewrite rules for clean routes
-│   ├── index.php               ← Unified router entry point & controllers (30+ routes)
-│   ├── config.php              ← Environment loading (.env) & PDO MySQL connection
-│   ├── auth.php                ← Timing-safe HS256 JWT & password routines (bcrypt)
-│   ├── mail.php                ← Gmail SMTP socket connection & system alerts
-│   ├── seed.php                ← Database bootstrap & Super Admin seeder
-│   └── .env                    ← Secrets & database config (never commit!)
-│
-├── database/
-│   └── schema_mysql.sql        ← MySQL DDL script (tables, enums, FKs & indexes)
-│
-├── frontend/                   ← Web portal pages & assets
-│   ├── index.html              ← Homepage
-│   ├── about.html              ← Studio team info
-│   ├── services.html           ← Custom service listings
-│   ├── films.html              ← Film portfolio showcases
-│   ├── vfx.html                ← VFX showcases
-│   ├── portfolio.html          ← Master portfolio filter grid
-│   ├── contact.html            ← Contact message submission form
-│   ├── login.html              ← Client dashboard login
-│   ├── register.html           ← Self-registration form
-│   ├── css/                    ← Design system & page styles
-│   └── js/                     ← API configs & dashboard scripts
-│
-└── router.php                  ← Local development router for built-in PHP server
-```
+> [!IMPORTANT]
+> **Never commit your `.env` file or raw credentials to the Git repository.**
+>
+> The project's `.gitignore` is configured to ignore `.env`, `api/.env`, and `.gitpat.txt` by default. 
+> To configure credentials securely:
+> 1. Copy the `.env.example` file in the root to `.env` (or create a `.env` in the `api/` directory).
+> 2. Populate the `.env` file with your environment-specific credentials.
 
----
-
-## ⚙️ Environment Configuration (`.env`)
-
-Create a `.env` file in the `api/` folder (or project root). It should match this configuration template:
+### ⚙️ Environment Configuration Template (`.env`)
 
 ```env
 # Database connection string (supports mysql or postgres formats)
-DATABASE_URL=mysql://db_username:db_password@localhost:3306/db_name
+DATABASE_URL=mysql://your_db_username:your_db_password@your_db_host:3306/your_db_name
 
-# JWT signing secret (use a long, random string in production)
-JWT_SECRET_KEY=vanix_studio_super_secret_jwt_key_2025
+# JWT Security Configurations (use a long, random secret string in production)
+JWT_SECRET_KEY=your_jwt_secret_key_here
 JWT_ALGORITHM=HS256
 ACCESS_TOKEN_EXPIRE_MINUTES=1440
 
-# Super Admin credentials (seeded on setup)
-SUPER_ADMIN_EMAIL=vanixuniversal@gmail.com
-SUPER_ADMIN_PASSWORD=VNX@SuperAdmin#2025
+# Super Admin setup credentials (seeded on setup script execution)
+SUPER_ADMIN_EMAIL=your_super_admin_email@domain.com
+SUPER_ADMIN_PASSWORD=your_secure_password_here
 
-# Gmail SMTP for notifications (Leave blank to use host's native mail() fallback)
-GMAIL_USER=vanixuniversal@gmail.com
-GMAIL_APP_PASSWORD=ttjlriwbkamxynpg
+# Gmail SMTP Configuration for email alerts & notifications
+# Leave blank to use host's native mail() fallback
+GMAIL_USER=your_gmail_user@gmail.com
+GMAIL_APP_PASSWORD=your_gmail_app_password_here
 
-# CORS and Domains
-FRONTEND_URL=http://localhost:5500
-PROD_DOMAIN=vanix.co.in
-ENV=development
+# CORS and Domain Settings
+FRONTEND_URL=http://localhost:8000
+PROD_DOMAIN=yourdomain.com
+ENV=production
 
-# Firebase Web Client Configuration (For Google Sign-In)
-FIREBASE_API_KEY=AIzaSyCbboR14h5_xVF4WBQRzyi4c0tb9ZCOd0g
-FIREBASE_AUTH_DOMAIN=vanix-studio.firebaseapp.com
-FIREBASE_PROJECT_ID=vanix-studio
-FIREBASE_STORAGE_BUCKET=vanix-studio.firebasestorage.app
-FIREBASE_APP_ID=1:460374534778:web:bc5e3733ecdc4ed2e0a9c3
-FIREBASE_MESSAGING_SENDER_ID=460374534778
-FIREBASE_MEASUREMENT_ID=G-SN2VJKG3K1
+# Firebase Web Client Configuration (For Google Sign-In verification)
+FIREBASE_API_KEY=your_firebase_api_key
+FIREBASE_AUTH_DOMAIN=your_firebase_auth_domain
+FIREBASE_PROJECT_ID=your_firebase_project_id
+FIREBASE_STORAGE_BUCKET=your_firebase_storage_bucket
+FIREBASE_APP_ID=your_firebase_app_id
+FIREBASE_MESSAGING_SENDER_ID=your_firebase_sender_id
+FIREBASE_MEASUREMENT_ID=your_firebase_measurement_id
 ```
 
 ---
 
-## 🚀 Running the Project Locally
+## 📁 Project Directory Structure
 
-No external web server (like Apache or Nginx) is needed to test locally. PHP has a built-in server that we configure using `router.php`:
-
-1. Open a terminal in the `vanixstudio/` directory.
-2. Start the development server:
-   ```bash
-   php -S localhost:8000 router.php
-   ```
-3. Open **`http://localhost:8000`** in your browser. The router serves the frontend pages correctly and maps all API requests to the PHP controller seamlessly.
+```
+vanixstudio/
+├── api/                        ← Backend REST API & server logic
+│   ├── .htaccess               ← Apache rewrite rules for clean routes
+│   ├── index.php               ← Unified router entry point & controller handlers (30+ routes)
+│   ├── config.php              ← Environment configuration loader (.env) & PDO connection
+│   ├── auth.php                ← Timing-safe HS256 JWT authorization & password bcrypt helper
+│   ├── mail.php                ← Gmail SMTP/Socket helper and mailer templates
+│   └── seed.php                ← Database bootstrap & initial Super Admin creation
+│
+├── assets/                     ← Project graphics, images, logos & video assets
+│   └── images/                 ← Logo SVGs, JPEGs, and animations
+│
+├── css/                        ← Cascading Style Sheets
+│   ├── main.css                ← Global/shared layout styling
+│   ├── pages/                  ← Page-specific stylesheets
+│   └── *.src.css               ← Original uncompiled styling source files
+│
+├── database/                   ← Database setup and initialization scripts
+│   └── schema_mysql.sql        ← DDL SQL script defining tables, enums, FK constraints, and indexes
+│
+├── js/                         ← Client-side javascript controllers
+│   ├── api-config.js           ← Configuration for client API domains
+│   ├── pages/                  ← Page-specific controllers
+│   └── *.src.js                ← Original uncompiled javascript source files
+│
+├── pages/                      ← Subpages & dashboards
+│   ├── *.html                  ← Production dashboard and subpages
+│   └── *.src.html              ← Original uncompiled subpages source files
+│
+├── .env.example                ← Template configuration file containing placeholders
+├── .gitignore                  ← Configured to prevent committing sensitive keys and dependencies
+├── index.html                  ← Portal Homepage (compiled production version)
+├── index.src.html              ← Homepage source code (original uncompiled source)
+├── compile.py                  ← Python compile script for obfuscating/minifying assets
+├── router.php                  ← Local environment router mapping API endpoints and HTML pages
+├── robots.txt                  ← Search engine crawler rules
+└── sitemap.xml                 ← SEO Sitemap index
+```
 
 ---
 
-## 📦 Production Deployment (Hostinger Shared Web Hosting)
+## 🛠️ Build & Compilation Workflow
 
-To deploy the application directly onto Hostinger Shared Hosting:
+The project contains a source directory structure designed to prevent casual code extraction by obfuscating static page elements in the production output files.
 
-1. **MySQL Database Setup**:
-   - In Hostinger hPanel, go to **Databases** > **MySQL Databases**.
-   - Create a new MySQL database, a user, and a secure password.
-2. **Environment Variables**:
-   - Create a `.env` file under the `/api/` folder.
-   - Set the `DATABASE_URL` using the credentials created in Step 1:
-     `DATABASE_URL=mysql://db_user:db_password@localhost:3306/db_name`
-3. **Upload Base Files**:
-   - Using Hostinger's **File Manager** (or FTP), upload the entire contents of the `frontend/` directory directly into the root `public_html/` folder (so `index.html` sits directly inside `public_html/`).
-   - Upload the `/api/` folder containing the PHP files directly into `public_html/api/`.
-4. **Initialize Database Tables**:
-   - In your browser, navigate to your live domain setup script:
-     **`https://vanix.co.in/api/seed.php`**
-   - This script reads the `database/schema_mysql.sql` definitions, creates all 10 MySQL tables (using secure InnoDB engine constraints), and seeds your Super Admin credentials.
+* **Source Files (`*.src.html`, `*.src.css`, `*.src.js`)**: These are your working files where you should write/edit code.
+* **Compiled Files (`*.html`, `*.css`, `*.js`)**: These files are generated by the compiler script. They minify stylesheets, and base64 obfuscate JS/HTML templates so they do not render source code on client-side inspectors.
+
+### 💻 Compiling Source Files
+
+Whenever you make changes to files ending in `.src.*`, run the compilation script to generate the production-ready code:
+
+```bash
+python compile.py
+```
+
+---
+
+## 🚀 Commands & Local Development
+
+### 1. Local Development Server
+
+PHP includes a built-in server. You can spin up the environment locally without Apache:
+
+```bash
+php -S localhost:8000 router.php
+```
+
+Once running, navigate to `http://localhost:8000` in your web browser. The local development router (`router.php`) will handle API requests to `/api/*` and render directories as expected.
+
+### 2. Manual Database Setup
+
+If you prefer setting up the MySQL schema manually or importing it via PHPMyAdmin, run the DDL schema script:
+
+```bash
+mysql -u your_username -p your_database < database/schema_mysql.sql
+```
+
+---
+
+## 📦 Production Deployment (e.g., Hostinger Shared Hosting)
+
+To deploy the portal onto shared web hosting:
+
+1. **Setup MySQL Database**:
+   - Go to your Hosting Panel (e.g. hPanel).
+   - Create a MySQL Database, a user, and record the host, name, username, and password.
+2. **Configure Environment variables**:
+   - Create a file named `.env` inside the `api/` folder (or at the root directory of your host, depending on the loader path).
+   - Insert your `DATABASE_URL` and other configs using your real credentials.
+3. **Upload Files**:
+   - Connect via FTP (e.g. FileZilla) or use the Hostinger File Manager.
+   - Upload the compiled files (like `index.html`, `css/`, `js/`, `assets/`, `pages/`, etc.) directly into the `public_html/` root.
+   - Upload the `api/` directory into `public_html/api/`.
+4. **Bootstrap & Seed**:
+   - Run the initial database setup script by visiting:
+     `https://yourdomain.com/api/seed.php`
+   - This script creates all required MySQL tables and establishes your initial Super Admin user.
